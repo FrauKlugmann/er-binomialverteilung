@@ -147,6 +147,8 @@ footer{color:var(--muted);text-align:right;font-size:.85rem;padding-top:4px}
 .bc .pa{font-size:1.9em;font-weight:300;line-height:1;transform:scaleX(.7)}
 .fm{font-family:"Cambria Math","Times New Roman",serif;font-size:1.25rem;white-space:nowrap}
 .fm sup{font-size:.68em}
+.choices.one{grid-template-columns:1fr}
+.choices.one .fm{white-space:normal;font-size:1.1rem;line-height:2}
 .choice.fmc span:last-child{font-weight:500}
 .fx-coin{border-radius:50%;background:radial-gradient(circle,#4a0a86 0,#3a0670 62%,rgba(58,6,112,0) 72%);perspective:30cqw}
 .fx-coin>div{position:absolute;inset:0;border-radius:50%;animation:coinflip 5s cubic-bezier(.3,.1,.3,1) infinite}
@@ -216,9 +218,9 @@ function readCarry(){
 const carry=readCarry();
 
 /* ---------- Zahlen ---------- */
-const dec=(x,k=4)=>{let s=x.toFixed(k).replace(/0+$/,"").replace(/\.$/,"");return s.replace(".",",")};
-const r4=x=>x.toFixed(4).replace(".",",");
-const pctS=x=>dec(x*100,2)+" %";
+const dec=(x,k=3)=>{let s=x.toFixed(k).replace(/0+$/,"").replace(/\.$/,"");return s.replace(".",",")};
+const r4=x=>x.toFixed(3).replace(".",",");
+const pctS=x=>dec(x*100,1)+" %";
 function C(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r)}
 const pdf=(n,p,k)=>C(n,k)*Math.pow(p,k)*Math.pow(1-p,n-k);
 const cdf=(n,p,k)=>{let s=0;for(let i=0;i<=k;i++)s+=pdf(n,p,i);return s};
@@ -240,7 +242,7 @@ function evalExpr(src){
   function sum(){let v=prod();while(peek()==="+"||peek()==="-"){const o=s[pos++];const r=prod();v=o==="+"?v+r:v-r}return v}
   try{const v=sum();if(pos!==s.length||!isFinite(v))return NaN;return v}catch(e){return NaN}
 }
-/* gerundet auf 4 Nachkommastellen oder auf 2 Nachkommastellen in Prozent ist ok */
+/* Regel: Dezimalzahl auf 3 Nachkommastellen, Prozent auf 1 Nachkommastelle */
 function close(v,p){if(!isFinite(v))return false;return Math.abs(v-p)<=0.00051||Math.abs(v-p)<=0.004*p}
 
 /* ---------- Sachkontexte ---------- */
@@ -248,11 +250,11 @@ const P16={v:1/6,f:"1/6"};
 const CTX=[
  n=>({n,p:P16,txt:`Ein fairer Würfel wird ${n}-mal geworfen. X ist die Anzahl der Sechsen.`,tr:"eine 6",word:k=>`${k}-mal eine 6`}),
  n=>({n,p:{v:.5},txt:`Eine Münze wird ${n}-mal geworfen. X ist die Anzahl der Würfe mit Wappen.`,tr:"Wappen",word:k=>`${k}-mal Wappen`}),
- n=>({n,p:{v:.25},txt:`Ein Test hat ${n} Fragen mit je 4 Antworten, von denen genau eine richtig ist. Lena rät bei jeder Frage. X ist die Anzahl der richtigen Antworten.`,tr:"richtige Antwort",word:k=>`${k} richtige Antworten`}),
+ n=>({n,p:{v:.25},txt:`Ein Test hat ${n} Fragen mit je 4 Antworten, von denen genau eine richtig ist. Lena rät bei jeder Frage. X ist die Anzahl der richtigen Antworten.`,tr:"richtige Antwort",word:k=>k==1?"1 richtige Antwort":`${k} richtige Antworten`}),
  n=>({n,p:{v:.7},txt:`Tom trifft beim Freiwurf mit einer Wahrscheinlichkeit von 70 %. Er wirft ${n}-mal. X ist die Anzahl der Treffer.`,tr:"Treffer",word:k=>`${k} Treffer`}),
- n=>({n,p:{v:.1},txt:`10 % der Schrauben einer großen Lieferung sind fehlerhaft. Es werden ${n} Schrauben zufällig entnommen. X ist die Anzahl der fehlerhaften Schrauben.`,tr:"fehlerhafte Schraube",word:k=>`${k} fehlerhafte Schrauben`}),
- n=>({n,p:{v:.4},txt:`In einer Urne liegen 4 rote und 6 blaue Kugeln. Es wird ${n}-mal mit Zurücklegen gezogen. X ist die Anzahl der roten Kugeln.`,tr:"rote Kugel",word:k=>`${k} rote Kugeln`}),
- n=>({n,p:{v:.2},txt:`Ein Glücksrad hat 5 gleich große Felder, eines davon ist ein Gewinnfeld. Es wird ${n}-mal gedreht. X ist die Anzahl der Gewinne.`,tr:"Gewinn",word:k=>`${k} Gewinne`}),
+ n=>({n,p:{v:.1},txt:`10 % der Schrauben einer großen Lieferung sind fehlerhaft. Es werden ${n} Schrauben zufällig entnommen. X ist die Anzahl der fehlerhaften Schrauben.`,tr:"fehlerhafte Schraube",word:k=>k==1?"1 fehlerhafte Schraube":`${k} fehlerhafte Schrauben`}),
+ n=>({n,p:{v:.4},txt:`In einer Urne liegen 4 rote und 6 blaue Kugeln. Es wird ${n}-mal mit Zurücklegen gezogen. X ist die Anzahl der roten Kugeln.`,tr:"rote Kugel",word:k=>k==1?"1 rote Kugel":`${k} rote Kugeln`}),
+ n=>({n,p:{v:.2},txt:`Ein Glücksrad hat 5 gleich große Felder, eines davon ist ein Gewinnfeld. Es wird ${n}-mal gedreht. X ist die Anzahl der Gewinne.`,tr:"Gewinn",word:k=>k==1?"1 Gewinn":`${k} Gewinne`}),
  n=>({n,p:{v:.6},txt:`60 % der Schüler einer großen Schule fahren mit dem Bus. Es werden ${n} Schüler zufällig befragt. X ist die Anzahl der Busfahrer.`,tr:"Busfahrer",word:k=>`${k} Busfahrer`})
 ];
 
@@ -286,8 +288,8 @@ function makeEinzel(){
     const v=pdf(n,p,k);if(v<.01)continue;used.add(ci);
     const q=qOf(c.p);
     out.push({kind:"num",q:`${c.txt} Berechnet die Wahrscheinlichkeit für <b>genau ${c.word(k)}</b>.`,p:v,fails:0,
-      tip1:`X ist binomialverteilt mit n = ${n} und p = ${pS(c.p)}. Gesucht ist P(X = ${k}). Nutzt die Bernoulli-Formel P(X = k) = (n über k) · p<sup>k</sup> · (1 − p)<sup>n − k</sup> oder die Binomial-Funktion eures Taschenrechners.`,
-      tip2:`<span class="fm">P(X = ${k}) = ${formula(n,k,c.p,q)}</span>`,
+      tip1:`Bestimmt zuerst die drei Größen: Wie viele Versuche n gibt es? Wie groß ist die Trefferwahrscheinlichkeit p? Wie viele Treffer k sind gefragt? Dann hilft die Bernoulli-Formel oder die Binomial-Funktion eures Taschenrechners.`,
+      tip2:`Prüft: Ist p wirklich die Wahrscheinlichkeit für das, was gezählt wird? Habt ihr P(X = k) berechnet und nicht P(X ≤ k)? Rundet auf 3 Nachkommastellen.`,
       sol:`<span class="fm">P(X = ${k}) = ${formula(n,k,c.p,q)}</span> ≈ ${r4(v)} = ${pctS(v)}`});
   }
   return out;
@@ -311,8 +313,8 @@ function makeKum(){
       if(v<.02||v>.98)continue;
       task={kind:"num",q:`${c.txt} Berechnet die Wahrscheinlichkeit für <b>${txt}</b>.`,
         p:v,fails:0,
-        tip1:`X ist binomialverteilt mit n = ${n} und p = ${pS(c.p)}. Übersetzt die Worte in Zeichen: „höchstens“ = ≤, „weniger als“ = &lt;, „mindestens“ = ≥, „mehr als“ = &gt;. Ihr Taschenrechner kann kumulierte Wahrscheinlichkeiten P(X ≤ k) direkt berechnen.`,
-        tip2:`Gesucht ist ${rw}.`,
+        tip1:`Bestimmt n und p. Übersetzt dann die Worte in Zeichen: „höchstens“ = ≤, „weniger als“ = &lt;, „mindestens“ = ≥, „mehr als“ = &gt;.`,
+        tip2:`Der Taschenrechner liefert nur P(X ≤ k). Für „mindestens“ und „mehr als“ braucht ihr das Gegenereignis. Achtet genau darauf, ob die Grenze selbst noch dazugehört.`,
         sol:`${rw} ≈ ${r4(v)} = ${pctS(v)}`};
       ci++;
     }
@@ -328,14 +330,36 @@ const BF=[
  ()=>{const n=pick([10,15,20]),k=8+rand(4);return {q:`Ein Test hat ${n} Fragen mit je 4 Antworten, eine davon ist richtig. Jemand rät bei jeder Frage. Wie groß ist die Wahrscheinlichkeit, <b>genau ${Math.min(k,n-1)} Fragen falsch</b> zu beantworten?`,n,k:Math.min(k,n-1),p:{v:.75}}},
  ()=>{const n=pick([8,10]),k=5+rand(3);return {q:`Tom trifft beim Freiwurf mit 70 %. Er wirft ${n}-mal. Wie groß ist die Wahrscheinlichkeit für <b>genau ${k} Treffer</b>?`,n,k,p:{v:.7}}},
  ()=>{const n=pick([8,10]),k=2+rand(3);return {q:`Tom trifft beim Freiwurf mit 70 %. Er wirft ${n}-mal. Wie groß ist die Wahrscheinlichkeit, dass er <b>genau ${k}-mal daneben</b> wirft?`,n,k,p:{v:.3}}},
- ()=>{const n=pick([20,25,30]),k=1+rand(3);return {q:`10 % der Schrauben einer großen Lieferung sind fehlerhaft. ${n} Schrauben werden geprüft. Wie groß ist die Wahrscheinlichkeit für <b>genau ${k} fehlerhafte</b> Schrauben?`,n,k,p:{v:.1}}},
+ ()=>{const n=pick([20,25,30]),k=1+rand(3);return {q:`10 % der Schrauben einer großen Lieferung sind fehlerhaft. ${n} Schrauben werden geprüft. Wie groß ist die Wahrscheinlichkeit für <b>genau ${k} fehlerhafte</b> ${k==1?"Schraube":"Schrauben"}?`,n,k,p:{v:.1}}},
  ()=>{const n=pick([5,6,7]),k=2+rand(2);return {q:`In einer Urne liegen 2 rote und 3 blaue Kugeln. Es wird ${n}-mal mit Zurücklegen gezogen. Wie groß ist die Wahrscheinlichkeit für <b>genau ${k} rote</b> Kugeln?`,n,k,p:{v:.4}}},
  ()=>{const n=pick([6,8,10]),k=2+rand(3);return {q:`Ein Glücksrad hat 5 gleich große Felder, eines ist ein Gewinnfeld. Es wird ${n}-mal gedreht. Wie groß ist die Wahrscheinlichkeit für <b>genau ${k} Gewinne</b>?`,n,k,p:{v:.2}}}
 ];
+const CUMC=[
+ {g:0,p:P16,txt:n=>`Ein fairer Würfel wird ${n}-mal geworfen.`,w:k=>`${k}-mal eine 6`},
+ {g:1,p:{v:.25},txt:n=>`Ein Test hat ${n} Fragen mit je 4 Antworten, eine davon ist richtig. Jemand rät bei jeder Frage.`,w:k=>`${k} richtige Antworten`},
+ {g:2,p:{v:.7},txt:n=>`Tom trifft beim Freiwurf mit 70 %. Er wirft ${n}-mal.`,w:k=>`${k} Treffer`},
+ {g:3,p:{v:.1},txt:n=>`10 % der Schrauben einer großen Lieferung sind fehlerhaft. ${n} Schrauben werden geprüft.`,w:k=>`${k} fehlerhafte Schrauben`},
+ {g:4,p:{v:.4},txt:n=>`In einer Urne liegen 2 rote und 3 blaue Kugeln. Es wird ${n}-mal mit Zurücklegen gezogen.`,w:k=>`${k} rote Kugeln`},
+ {g:5,p:{v:.2},txt:n=>`Ein Glücksrad hat 5 gleich große Felder, eines ist ein Gewinnfeld. Es wird ${n}-mal gedreht.`,w:k=>`${k} Gewinne`}
+];
+const term=(n,i,p,q)=>`${bc(n,i)} · ${pw(pT(p),i)} · ${pw(pT(q),n-i)}`;
+const sumT=(n,a,b,p,q)=>{const t=[];for(let i=a;i<=b;i++)t.push(term(n,i,p,q));return t.join(" + ")};
+function cumTask(c,low){
+  const n=pick([5,6,8]),p=c.p,q=qOf(p);let q1,a,b,wa,wb,lab;
+  if(low){a=0;b=2;if(rand(2)){q1=`höchstens ${c.w(2)}`;wa=0;wb=1;lab="P(X ≤ 2)"}else{q1=`weniger als ${c.w(3)}`;wa=0;wb=3;lab="P(X &lt; 3) = P(X ≤ 2)"}}
+  else{a=n-2;b=n;if(rand(2)){q1=`mindestens ${c.w(n-2)}`;wa=n-1;wb=n;lab=`P(X ≥ ${n-2})`}else{q1=`mehr als ${c.w(n-3)}`;wa=n-3;wb=n;lab=`P(X &gt; ${n-3}) = P(X ≥ ${n-2})`}}
+  const right=sumT(n,a,b,p,q);
+  const wrong=[sumT(n,wa,wb,p,q),sumT(n,a,b,q,p),"1 − ( "+right+" )"];
+  const opts=shuffle([right,...wrong]);
+  const parts=[];for(let i=a;i<=b;i++)parts.push(`P(X = ${i})`);
+  return {kind:"mc",fm:true,wide:true,q:`${c.txt(n)} Wie groß ist die Wahrscheinlichkeit für <b>${q1}</b>? Welcher Ansatz ist richtig?`,opts,correct:opts.indexOf(right),fails:0,
+    h:["Übersetzt zuerst in Zeichen: Welche Trefferzahlen gehören alle zum Ereignis? Schreibt sie auf.","Jede passende Trefferzahl liefert einen Summanden. Prüft genau, ob die Grenze selbst noch dazugehört – und was hier der Treffer ist."],
+    e:`${lab} = ${parts.join(" + ")}`};
+}
 function makeFormel(){
   const GRP=[0,0,1,1,2,2,3,4,5],idx=[],seen=new Set();
-  for(const i of shuffle(BF.map((_,i)=>i))){if(!seen.has(GRP[i])&&idx.length<PER){seen.add(GRP[i]);idx.push(i)}}
-  return idx.map(i=>BF[i]).map(g=>{
+  for(const i of shuffle(BF.map((_,i)=>i))){if(!seen.has(GRP[i])&&idx.length<2){seen.add(GRP[i]);idx.push(i)}}
+  const single=idx.map(i=>BF[i]).map(g=>{
     const t=g(),q=qOf(t.p),n=t.n,k=t.k;
     const right=formula(n,k,t.p,q);
     const wrong=[`${bc(n,k)} · ${pw(pT(q),k)} · ${pw(pT(t.p),n-k)}`,`${pw(pT(t.p),k)} · ${pw(pT(q),n-k)}`,`${bc(n,n-k)} · ${pw(pT(t.p),n-k)} · ${pw(pT(q),k)}`];
@@ -344,14 +368,18 @@ function makeFormel(){
     return {kind:"mc",fm:true,q:t.q+" Welche Bernoulli-Formel ist richtig?",opts,correct:opts.indexOf(right),fails:0,
       e:`Treffer ist hier das Ereignis aus der Frage mit p = ${pS(t.p)}. Es gibt n = ${n} Versuche und genau k = ${k} Treffer. Also <span class="fm">P(X = ${k}) = ${right}</span>`};
   });
+  const rest=shuffle(CUMC.filter(c=>!seen.has(c.g)));
+  return [...single,cumTask(rest[0],true),cumTask(rest[1],false)];
 }
 
+/* Hinweise bei Auswahlaufgaben (verraten keine Lösung) */
+const MCH={muenze:["Prüft die vier Bedingungen einer Bernoulli-Kette: nur zwei Ausgänge, gleichbleibendes p, unabhängige Versuche, feste Anzahl n.","Wenn alle Bedingungen passen: Was wird gezählt, wie oft wird der Versuch durchgeführt und wie groß ist die Trefferwahrscheinlichkeit bei einem Versuch?"],buecher:["Klärt zuerst: Was ist hier der Treffer, und wie groß ist seine Wahrscheinlichkeit?","Zur Trefferwahrscheinlichkeit gehört der Exponent k, zur Gegenwahrscheinlichkeit der Exponent n − k."],_:["Lest die Aufgabe noch einmal genau.","Schaut euch im Labor nach Hinweisen um."]};
 /* ---------- Stationen und Szene ---------- */
 const ST={
   muenze:{name:"Münz-Bildschirm",icon:"🪙",title:"Der Münz-Bildschirm",found:"Unter der Münzfolge leuchtet auf",intro:"Auf dem Bildschirm läuft eine Bernoulli-Kette. Entscheidet bei jedem Zufallsversuch: Ist X binomialverteilt?",make:makeBinom},
   trommel:{name:"Lostrommel",icon:"🔴",title:"Die Lostrommel",found:"Die Lostrommel öffnet sich. Zwischen den Kugeln liegt",intro:"Die Lostrommel gibt ihr Geheimnis nur frei, wenn ihr vier Wahrscheinlichkeiten für genau k Treffer berechnet.",make:makeEinzel},
   gauss:{name:"Glockenkurven-Bildschirm",icon:"📈",title:"Der Bildschirm mit der Glockenkurve",found:"Die Kurve färbt sich grün und zeigt",intro:"Unter der Kurve blinken Aufgaben zu höchstens, mindestens und dazwischen.",make:makeKum},
-  buecher:{name:"Bücherstapel",icon:"📘",title:"Die Formelbücher",found:"Zwischen den Seiten steckt ein Zettel mit",intro:"Im obersten Buch sind Bernoulli-Formeln durcheinandergeraten. Findet jeweils die richtige.",make:makeFormel}
+  buecher:{name:"Bücherstapel",icon:"📘",title:"Die Formelbücher",found:"Zwischen den Seiten steckt ein Zettel mit",intro:"Im obersten Buch sind Bernoulli-Formeln und Ansätze durcheinandergeraten. Findet jeweils den richtigen.",make:makeFormel}
 };
 const ORDER=["muenze","trommel","gauss","buecher"], N=ORDER.length;
 const HINT={
@@ -452,7 +480,7 @@ function intro(){
    <p>Ihr seid durch die Tür gekommen – doch auch hier ist die nächste <b>Sicherheitstür</b> mit einem <b>vierstelligen Code</b> verschlossen.</p>
    <p>Vier Stationen sind versteckt: Binomialverteilung erkennen, P(X = k) berechnen, kumulierte Wahrscheinlichkeiten und die passende Bernoulli-Formel. An jeder Station löst ihr <b>vier Aufgaben</b>.</p>
    ${has?`<p>Aus Raum 1 bringt ihr <b>${fmt(carry.rest).replace("+","−")}</b> Restzeit und <b>${carry.fehler}</b> Fehlversuche mit. Dazu kommen 30 Minuten.</p>`:""}
-   <p>Rechnet Ergebnisse auf <b>4 Nachkommastellen</b> genau. Euer Taschenrechner darf helfen.</p>
+   <p>Rundet Wahrscheinlichkeiten auf <b>3 Nachkommastellen</b> (in Prozent auf 1 Nachkommastelle). Euer Taschenrechner darf helfen.</p>
    <div class="row"><button class="btn" id="go">Labor betreten</button></div>`);
   panel.querySelector(".close").hidden=true;
   $("#go").addEventListener("click",()=>{S.started=true;startTimer();closePanel();});
@@ -465,18 +493,18 @@ function station(id){
    <h2 id="ptitle">${info.title}</h2>${st.i===0?`<p>${info.intro}</p>`:""}`;
   if(t.kind==="mc"){
     showPanel(head+`<div class="card"><p class="q">${t.q}</p></div>
-     <div class="choices">${t.opts.map((o,j)=>`<button class="choice${t.fm?" fmc":""}" data-c="${j}"><span class="lt">${"ABCD"[j]}</span><span${t.fm?' class="fm"':""}>${o}</span></button>`).join("")}</div>
+     <div class="choices${t.wide?" one":""}">${t.opts.map((o,j)=>`<button class="choice${t.fm?" fmc":""}" data-c="${j}"><span class="lt">${"ABCD"[j]}</span><span${t.fm?' class="fm"':""}>${o}</span></button>`).join("")}</div>
      <div id="fb" aria-live="polite"></div>`,".choice");
     panel.querySelectorAll(".choice").forEach(b=>b.addEventListener("click",()=>{
       const c=+b.dataset.c;
       if(c===t.correct){beep(true);panel.querySelectorAll(".choice").forEach(x=>x.disabled=true);b.classList.add("right");success(id,t.e);}
-      else{beep(false);S.mistakes++;t.fails++;b.disabled=true;$("#fb").innerHTML=`<div class="fb wrong"><b class="t">Nicht ganz</b>Diese Antwort stimmt nicht.</div>${t.fails>=2?`<div class="fb tip" style="margin-top:10px"><b class="t">Hinweis</b>${t.e}</div>`:""}`;}
+      else{beep(false);S.mistakes++;t.fails++;b.disabled=true;const H=t.h||MCH[id]||MCH._;$("#fb").innerHTML=`<div class="fb wrong"><b class="t">Nicht ganz</b>Diese Antwort stimmt nicht.</div><div class="fb tip" style="margin-top:10px"><b class="t">Hinweis</b>${t.fails>=2?H[1]:H[0]}</div>${t.fails>=3?`<div class="fb tip" style="margin-top:10px;border-color:var(--cyan)"><b class="t" style="color:var(--cyan)">Holt euch Hilfe</b>Ihr habt es jetzt dreimal versucht. Fragt eure Lehrerin oder euren Lehrer – gemeinsam findet ihr den Fehler!</div>`:""}`;}
     }));
     return;
   }
   showPanel(head+`<div class="card"><p class="q">${t.q}</p></div>
-   <div class="answer"><label for="ans">P =</label><input id="ans" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="decimal" placeholder="z. B. 0,2668"><button class="btn" id="check">Prüfen</button></div>
-   <p class="legend">Auf 4 Nachkommastellen runden (z. B. 0,2668) oder in Prozent (26,68 %).</p>
+   <div class="answer"><label for="ans">P =</label><input id="ans" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="decimal" placeholder="z. B. 0,267"><button class="btn" id="check">Prüfen</button></div>
+   <p class="legend">Auf 3 Nachkommastellen runden (z. B. 0,267) oder in Prozent auf 1 Nachkommastelle (26,7 %).</p>
    <div id="fb" aria-live="polite"></div>`,"#ans");
   const inp=$("#ans");
   inp.addEventListener("keydown",e=>{if(e.key==="Enter")check(id)});
@@ -490,9 +518,8 @@ function check(id){
   beep(false);S.mistakes++;t.fails++;inp.classList.add("wrongv");setTimeout(()=>inp.classList.remove("wrongv"),900);
   let h=`<div class="fb wrong"><b class="t">Das stimmt noch nicht</b>${Number.isNaN(v)?"Diese Eingabe kann ich nicht lesen. Gebt eine Dezimalzahl mit Komma ein.":v>1?"Eine Wahrscheinlichkeit kann nie größer als 1 (bzw. 100 %) sein!":"Rechnet noch einmal nach."}</div>`;
   h+=`<div class="fb tip" style="margin-top:10px"><b class="t">Hinweis</b>${t.fails>=2?t.tip2:t.tip1}</div>`;
-  if(t.fails>=3)h+=`<div class="row" style="margin-top:10px"><button class="btn alt" id="showsol">Lösung anzeigen</button></div><div id="solbox"></div>`;
+  if(t.fails>=3)h+=`<div class="fb tip" style="margin-top:10px;border-color:var(--cyan)"><b class="t" style="color:var(--cyan)">Holt euch Hilfe</b>Ihr habt es jetzt dreimal versucht. Fragt eure Lehrerin oder euren Lehrer – gemeinsam findet ihr den Fehler!</div>`;
   fb.innerHTML=h;inp.focus();inp.select();
-  const sb=$("#showsol");if(sb)sb.addEventListener("click",()=>{$("#solbox").innerHTML=`<div class="fb tip" style="margin-top:10px"><b class="t">Lösung</b>${t.sol}<br>Tippt das Ergebnis ab, um weiterzukommen.</div>`;sb.hidden=true});
 }
 function success(id,expl){
   const st=S.st[id],last=st.i===PER-1;

@@ -274,16 +274,16 @@ function makeTasks(){
   if(ROOM===3)return shuffle(PROG).slice(0,4).map((c,i)=>{
     const n=pick(c.ns),[L,z]=lv[i],p=c.p,r=z*Math.sqrt(p*(1-p)/n),lo=p-r,hi=p+r;
     return {q:`${c.txt(n)} Bestimmt das <b>${L}-%-Prognoseintervall</b> für den Anteil ${c.what} in dieser Stichprobe.`,lo,hi,fails:0,
-      tip1:`Gegeben ist die Wahrscheinlichkeit p = ${c.ps}, gesucht ist der Bereich, in dem die relative Häufigkeit h mit ${L} % Wahrscheinlichkeit liegt:<br><span class="fm">[ p − c·√(p·(1 − p) : n) ; p + c·√(p·(1 − p) : n) ]</span><br>Für ${L} % ist c = ${decT(z,2)}.`,
-      tip2:`<span class="fm">c·√(p·(1 − p) : n) = ${decT(z,2)} · √(${c.ps} · ${decT(1-p,2)} : ${n}) ≈ ${dec(r,4)}</span><br>Rechnet jetzt ${c.ps} − ${dec(r,4)} und ${c.ps} + ${dec(r,4)}.`,
+      tip1:`Notiert, was gegeben ist: die Wahrscheinlichkeit p, den Stichprobenumfang n und den Wert c, der zu ${L} % gehört. Die Formel für das Prognoseintervall findet ihr irgendwo im Labor.`,
+      tip2:`Rechnet zuerst den Abstand zum Mittelpunkt aus. Dann einmal abziehen und einmal addieren. Rundet erst ganz am Ende auf drei Nachkommastellen.`,
       sol:`<span class="fm">[ ${c.ps} − ${dec(r,4)} ; ${c.ps} + ${dec(r,4)} ] ≈ [ ${dec(lo)} ; ${dec(hi)} ]</span>`,
       satz:`Mit einer Wahrscheinlichkeit von ${L} % liegt der Anteil ${c.what} in der Stichprobe zwischen ${pc(lo)} und ${pc(hi)}.`};
   });
   return shuffle(KONF).slice(0,4).map((c,i)=>{
     const n=pick(c.ns),k=Math.round(n*(c.pt+(Math.random()-.5)*.04)),h=k/n,[L,z]=lv[i],r=z*Math.sqrt(h*(1-h)/n),lo=h-r,hi=h+r;
     return {q:`${c.txt(n,k)} Bestimmt das <b>${L}-%-Konfidenzintervall</b> für den Anteil ${c.what}.`,lo,hi,fails:0,
-      tip1:`Zuerst die relative Häufigkeit der Stichprobe: h = k : n. Dann<br><span class="fm">[ h − c·√(h·(1 − h) : n) ; h + c·√(h·(1 − h) : n) ]</span><br>Für ${L} % ist c = ${decT(z,2)}.`,
-      tip2:`<span class="fm">h = ${k} : ${n} = ${decT(h)}</span><br><span class="fm">c·√(h·(1 − h) : n) = ${decT(z,2)} · √(${decT(h)} · ${decT(1-h)} : ${n}) ≈ ${dec(r,4)}</span>`,
+      tip1:`Ihr kennt p nicht – also braucht ihr zuerst die relative Häufigkeit h der Stichprobe. Dazu n und den Wert c, der zu ${L} % gehört. Die Formel findet ihr irgendwo im Foyer.`,
+      tip2:`Habt ihr h richtig berechnet? Rechnet dann den Abstand zum Mittelpunkt aus, einmal abziehen und einmal addieren. Rundet erst ganz am Ende auf drei Nachkommastellen.`,
       sol:`<span class="fm">h = ${decT(h)}; [ ${decT(h)} − ${dec(r,4)} ; ${decT(h)} + ${dec(r,4)} ] ≈ [ ${dec(lo)} ; ${dec(hi)} ]</span>`,
       satz:`Mit ${L} % Sicherheit liegt der unbekannte Anteil ${c.what} zwischen ${pc(lo)} und ${pc(hi)}.`};
   });
@@ -449,9 +449,8 @@ function check(id){
   const which=oa?"Die untere Grenze stimmt, die obere noch nicht.":ob?"Die obere Grenze stimmt, die untere noch nicht.":"Beide Grenzen stimmen noch nicht.";
   let h=`<div class="fb wrong"><b class="t">Noch nicht</b>${Number.isNaN(va)||Number.isNaN(vb)?"Eine Eingabe kann ich nicht lesen. Nutzt Dezimalzahlen mit Komma.":which}</div>`;
   h+=`<div class="fb tip" style="margin-top:10px"><b class="t">Hinweis</b>${t.fails>=2?t.tip2:t.tip1}</div>`;
-  if(t.fails>=3)h+=`<div class="row" style="margin-top:10px"><button class="btn alt" id="showsol">Lösung anzeigen</button></div><div id="solbox"></div>`;
+  if(t.fails>=3)h+=`<div class="fb tip" style="margin-top:10px;border-color:var(--cyan)"><b class="t" style="color:var(--cyan)">Holt euch Hilfe</b>Ihr habt es jetzt dreimal versucht. Fragt eure Lehrerin oder euren Lehrer – gemeinsam findet ihr den Fehler!</div>`;
   fb.innerHTML=h;
-  const sb=$("#showsol");if(sb)sb.addEventListener("click",()=>{$("#solbox").innerHTML=`<div class="fb tip" style="margin-top:10px"><b class="t">Lösung</b>${t.sol}<br>Tippt die Grenzen ab, um weiterzukommen.</div>`;sb.hidden=true});
 }
 function foundKey(id){
   renderAll();const n=keysGot();

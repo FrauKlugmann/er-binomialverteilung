@@ -197,8 +197,8 @@ const gcd=(a,b)=>{a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b]}return a||1
 const F=(n,d)=>{const g=gcd(n,d);return [n/g,d/g]};
 const fv=f=>f[0]/f[1];
 const fS=f=>f[1]===1?String(f[0]):`${f[0]}/${f[1]}`;
-const dec=(x,k=4)=>{let s=x.toFixed(k).replace(/0+$/,"").replace(/\.$/,"");return s.replace(".",",")};
-const pctS=x=>x<0.0001?x.toExponential(2).replace(".",",").replace("e-"," · 10^−"):dec(x*100,2)+" %";
+const dec=(x,k=3)=>{let s=x.toFixed(k).replace(/0+$/,"").replace(/\.$/,"");return s.replace(".",",")};
+const pctS=x=>x<0.0001?x.toExponential(2).replace(".",",").replace("e-"," · 10^−"):dec(x*100,1)+" %";
 
 /* ---------- Eingabe auswerten: Bruch, Dezimalzahl, Prozent oder Term ---------- */
 function evalExpr(src){
@@ -220,13 +220,14 @@ function evalExpr(src){
   function sum(){let v=prod();while(peek()==="+"||peek()==="-"){const o=s[pos++];const r=prod();v=o==="+"?v+r:v-r}return v}
   try{const v=sum();if(pos!==s.length||!isFinite(v))return NaN;return v}catch(e){return NaN}
 }
-function close(v,p){if(!isFinite(v))return false;if(p<0.01)return Math.abs(v-p)<=0.01*p;return Math.abs(v-p)<=Math.max(0.006*p,0.0006)}
+/* Regel: Dezimalzahl auf 3 Nachkommastellen, Prozent auf 1 Nachkommastelle – genauere Eingaben (Bruch, Term) zählen auch */
+function close(v,p){if(!isFinite(v))return false;return Math.abs(v-p)<=0.00051||Math.abs(v-p)<=0.01*p}
 
 /* ---------- Station 1: Begriffe ---------- */
 const BEGRIFFE=[
  [{q:"Ein Würfel wird einmal geworfen. Wie lautet die <b>Ergebnismenge Ω</b>?",r:"Ω = {1; 2; 3; 4; 5; 6}",w:["Ω = {6}","Ω = {1; 6}","Ω = {0; 1; 2; 3; 4; 5; 6}"],e:"Die Ergebnismenge Ω enthält <b>alle möglichen Ergebnisse</b> des Zufallsversuchs."},
   {q:"Eine Münze wird <b>zweimal</b> geworfen (W = Wappen, Z = Zahl). Wie lautet die <b>Ergebnismenge Ω</b>?",r:"Ω = {WW; WZ; ZW; ZZ}",w:["Ω = {W; Z}","Ω = {WW; ZZ}","Ω = {WW; WZ; ZZ}"],e:"WZ und ZW sind verschiedene Ergebnisse: Einmal kommt das Wappen zuerst, einmal die Zahl."},
-  {q:"Was ist ein <b>Ergebnis</b>?",r:"ein möglicher Ausgang eines Zufallsversuchs",w:["die Menge aller möglichen Ausgänge","eine Zusammenfassung mehrerer Ausgänge","die Wahrscheinlichkeit eines Ausgangs"],e:"Ein Ergebnis ist <b>ein einzelner</b> möglicher Ausgang, z. B. „Augenzahl 3“. Die Menge aller Ergebnisse heißt Ergebnismenge."}],
+  {q:"Ein Glücksrad mit den Feldern 1, 2 und 3 wird <b>einmal</b> gedreht. Wie lautet die <b>Ergebnismenge Ω</b>?",r:"Ω = {1; 2; 3}",w:["Ω = {3}","Ω = {1; 2; 3; 4}","Ω = {6}"],e:"Ω enthält alle möglichen Ergebnisse: Das Rad kann auf 1, 2 oder 3 stehen bleiben."}],
  [{q:"Ein Würfel wird geworfen. <b>Ereignis E:</b> „gerade Augenzahl“. Welche Menge beschreibt E?",r:"E = {2; 4; 6}",w:["E = {1; 3; 5}","E = {2; 4}","E = {6}"],e:"Ein Ereignis ist eine <b>Teilmenge</b> der Ergebnismenge – hier alle geraden Augenzahlen."},
   {q:"Ein Glücksrad hat die Felder rot, blau und gelb. <b>Ereignis E:</b> „nicht rot“. Welche Menge ist E?",r:"E = {blau; gelb}",w:["E = {rot}","E = {rot; blau; gelb}","E = { }"],e:"Zu E gehören alle Ergebnisse, bei denen das Ereignis eintritt – also blau und gelb."},
   {q:"Ein Würfel wird geworfen. <b>Ereignis E:</b> „Augenzahl größer als 4“. Welche Menge ist E?",r:"E = {5; 6}",w:["E = {4; 5; 6}","E = {1; 2; 3; 4}","E = {5}"],e:"„Größer als 4“ heißt: 4 gehört <b>nicht</b> dazu. Also nur 5 und 6."}],
@@ -237,8 +238,20 @@ const BEGRIFFE=[
   {q:"Ein Würfel wird zweimal geworfen. Was ist das <b>Gegenereignis</b> zu „mindestens eine 6“?",r:"„keine 6“",w:["„genau eine 6“","„zwei Sechsen“","„höchstens eine 6“"],e:"Das Gegenteil von „mindestens eine“ ist „keine“. Das ist später ein super Trick zum Rechnen!"},
   {q:"Welche Aussage über das <b>Gegenereignis</b> stimmt immer?",r:"P(Ē) = 1 − P(E)",w:["P(Ē) = P(E)","P(Ē) = P(E) − 1","P(Ē) = 1 : P(E)"],e:"E und Ē ergeben zusammen das sichere Ereignis: P(E) + P(Ē) = 1."}]
 ];
+/* Definitionen: richtige Erklärung + drei andere Definitionen als Ablenker */
+const DEF=[
+ ["Ergebnis","ein einzelner möglicher Ausgang eines Zufallsversuchs"],
+ ["Ergebnismenge Ω","die Menge aller möglichen Ergebnisse eines Zufallsversuchs"],
+ ["Ereignis","eine Teilmenge der Ergebnismenge, also eine Zusammenfassung von Ergebnissen"],
+ ["sicheres Ereignis","ein Ereignis, das bei jeder Durchführung eintritt (E = Ω)"],
+ ["unmögliches Ereignis","ein Ereignis, das nie eintreten kann (E = { })"],
+ ["Gegenereignis Ē","alle Ergebnisse der Ergebnismenge, die nicht zum Ereignis E gehören"]
+];
 function makeBegriffe(){
-  return shuffle(BEGRIFFE).slice(0,PER).map(g=>{const t=pick(g);const opts=shuffle([t.r,...t.w]);return {kind:"mc",q:t.q,opts,correct:opts.indexOf(t.r),e:t.e,fails:0}});
+  const ex=shuffle(BEGRIFFE).slice(0,2).map(g=>{const t=pick(g);const opts=shuffle([t.r,...t.w]);return {kind:"mc",q:t.q,opts,correct:opts.indexOf(t.r),e:t.e,fails:0}});
+  const df=shuffle(DEF).slice(0,2).map(([b,d])=>{const opts=shuffle([d,...shuffle(DEF.filter(x=>x[1]!==d)).slice(0,3).map(x=>x[1])]);
+    return {kind:"mc",q:pick([`Welche Definition beschreibt den Begriff <b>${b}</b>?`,`Was versteht man unter dem Begriff <b>${b}</b>?`]),opts,correct:opts.indexOf(d),e:`<b>${b}</b>: ${d}.`,fails:0}});
+  return [ex[0],df[0],ex[1],df[1]];
 }
 
 /* ---------- Station 2: Laplace ---------- */
@@ -257,7 +270,7 @@ function laplace(){
 }
 function makeLaplace(){const out=[],seen=new Set();while(out.length<PER){const t=laplace();if(!seen.has(t.q)){seen.add(t.q);out.push({kind:"num",...t,fails:0,
   tip1:`Laplace-Regel: P(E) = Anzahl der günstigen Ergebnisse : Anzahl aller möglichen Ergebnisse.`,
-  tip2:`Es gibt ${t.m} mögliche ${t.ctx} und ${t.g} davon sind günstig. Also P = ${t.g}/${t.m}.`,
+  tip2:`Zählt genau: Welche ${t.ctx} sind günstig? Und wie viele ${t.ctx} gibt es insgesamt? Schreibt beides auf, bevor ihr rechnet. Sind wirklich alle Ergebnisse gleich wahrscheinlich?`,
   sol:`P = ${t.g}/${t.m}${fS(t.p)!==`${t.g}/${t.m}`?` = ${fS(t.p)}`:""} ≈ ${dec(fv(t.p))} = ${pctS(fv(t.p))}`})}}return out}
 
 /* ---------- Station 3: Urne, zweistufig ---------- */
@@ -279,7 +292,7 @@ function urne(){
   if(ev==="mind"){q="Wie groß ist die Wahrscheinlichkeit, dass <b>mindestens eine Kugel rot</b> ist?";p=F(bb[1]-bb[0],bb[1]);path=`1 − P(bb) = 1 − ${pb1} · ${pb2b}`}
   return {kind:"num",q:base+" "+q,p,urn:[r,b,0],key:`${r}${b}${mit}${ev}`,fails:0,
     tip1:`Zeichnet ein Baumdiagramm mit zwei Stufen. ${mit?"Mit Zurücklegen bleiben die Wahrscheinlichkeiten auf der 2. Stufe gleich.":"Ohne Zurücklegen fehlt auf der 2. Stufe eine Kugel: Der Nenner wird um 1 kleiner."} Pfadregel: Wahrscheinlichkeiten entlang eines Pfades <b>multiplizieren</b>, mehrere Pfade <b>addieren</b>.`,
-    tip2:`Rechnet: ${path}`,
+    tip2:{rr:"Zum Ereignis gehört nur <b>ein Pfad</b>: rot – rot.",bb:"Zum Ereignis gehört nur <b>ein Pfad</b>: blau – blau.",gleich:"Zum Ereignis gehören <b>zwei Pfade</b>: rot – rot und blau – blau.",eine:"Zum Ereignis gehören <b>zwei Pfade</b>: rot – blau und blau – rot.",mind:"Denkt an das <b>Gegenereignis</b>: Was ist das Gegenteil von „mindestens eine rote Kugel“?"}[ev]+(mit?" Prüft die Wahrscheinlichkeiten auf der 2. Stufe.":" Achtet auf der 2. Stufe auf Zähler <b>und</b> Nenner – eine Kugel ist schon weg."),
     sol:`${path} = ${fS(p)} ≈ ${dec(fv(p))} = ${pctS(fv(p))}`};
 }
 function makeUrne(){const out=[],seen=new Set();while(out.length<PER){const t=urne();if(!seen.has(t.key)){seen.add(t.key);out.push(t)}}return out}
@@ -303,11 +316,13 @@ function mehr(){
     else{q=`In einer Urne liegen ${r} rote und ${b} blaue Kugeln. Es wird ${n}-mal mit Zurücklegen gezogen. Wie groß ist die Wahrscheinlichkeit, <b>mindestens einmal eine blaue</b> Kugel zu ziehen?`;p=1-Math.pow(r/N,n);term=`1 − (${r}/${N})^${n}`;gegen=true}}
   return {kind:"num",q,p,term,gegen,fails:0,key:q,
     tip1:gegen?`„Mindestens einmal“ rechnet man am besten über das <b>Gegenereignis</b>: P(mindestens einmal) = 1 − P(keinmal).`:`Verkürztes Baumdiagramm: Ihr braucht nur <b>einen Pfad</b>. Die Wahrscheinlichkeit auf jeder Stufe ist gleich – also so oft multiplizieren, wie gezogen/geworfen wird.`,
-    tip2:`Rechnet: P = ${term}`,
+    tip2:gegen?`Bestimmt zuerst die Wahrscheinlichkeit, dass das Ereignis bei <b>keinem einzigen</b> Versuch eintritt. Wie hängt das mit der gesuchten Wahrscheinlichkeit zusammen?`:`Wie groß ist die Wahrscheinlichkeit für das Ereignis bei <b>einem</b> Versuch? Und wie oft wird der Versuch durchgeführt?`,
     sol:`P = ${term} ≈ ${p<0.0001?pctS(p):dec(p)+" = "+pctS(p)}`};
 }
 function makeMehr(){const out=[],seen=new Set();let g=0;while(out.length<PER){const t=mehr();if(seen.has(t.key))continue;if(out.length===PER-1&&!g&&!t.gegen)continue;seen.add(t.key);if(t.gegen)g++;out.push(t)}return shuffle(out)}
 
+/* Hinweise bei Auswahlaufgaben (verraten keine Lösung) */
+const MCH={_:["Lest die Frage noch einmal genau: Geht es um ein einzelnes Ergebnis, um eine Menge von Ergebnissen oder um alle möglichen Ergebnisse?","Im Labor gibt es einen Bildschirm mit einem Lexikon der Grundbegriffe. Schaut dort nach!"]};
 /* ---------- Stationen und Szene ---------- */
 const ST={
   muenze:{name:"Goldmünze",icon:"🪙",title:"Die Goldmünze",found:"Auf der Rückseite der Münze ist eingraviert",intro:"Ihr dreht die Münze um – auf der Rückseite stehen Fragen zu den Grundbegriffen der Wahrscheinlichkeit.",make:makeBegriffe},
@@ -325,7 +340,7 @@ const HINT={
     <div class="card"><h4>Gegenereignis Ē</h4><p>alle Ergebnisse, die nicht in E sind: P(Ē) = 1 − P(E)</p></div></div>`],
   radar:["Der große Bildschirm",`<p>Neben der Zielscheibe blinkt eine Formel:</p><div class="card"><p class="formula">P(E) = Anzahl der günstigen Ergebnisse<br>Anzahl aller möglichen Ergebnisse</p><p style="margin-top:8px">Das gilt nur, wenn alle Ergebnisse <b>gleich wahrscheinlich</b> sind (Laplace-Versuch).</p></div>`],
   gauss:["Der Bildschirm mit der Glockenkurve",`<p>Darunter steht:</p><div class="card"><p><b>Pfadregeln im Baumdiagramm</b></p><p>1. Entlang eines Pfades wird <b>multipliziert</b>.</p><p>2. Gehören mehrere Pfade zum Ereignis, werden ihre Wahrscheinlichkeiten <b>addiert</b>.</p><p style="margin-top:6px">Ohne Zurücklegen: Auf der 2. Stufe fehlt eine Kugel!</p></div>`],
-  tablet:["Das kleine Tablet",`<p>Eine Notiz: <i>„Mindestens einmal? Dann rechne 1 minus keinmal! P(mind. eine 6 bei 4 Würfen) = 1 − (5/6)<sup>4</sup>“</i></p>`]
+  tablet:["Das kleine Tablet",`<p>Eine Notiz: <i>„Mindestens einmal? Dann denk an das Gegenereignis: keinmal!“</i></p>`]
 };
 const LOOK={
   wuerfel:["Die Würfel","Zwei ganz normale Würfel. Ihr würfelt eine 3 und eine 5. Zufall eben – kein Hinweis."],
@@ -448,7 +463,7 @@ function openThing(id){
 function intro(){
   showPanel(`<p class="label">Escape-Room Stochastik · Raum 1: Grundlagen</p><h2 id="ptitle">Willkommen im Zufallslabor!</h2>
    <p>Hier wird geforscht, wie der Zufall funktioniert – und die <b>Sicherheitstür</b> ist mit einem <b>vierstelligen Code</b> verschlossen.</p>
-   <p>Im Labor sind <b>vier Stationen</b> versteckt: Grundbegriffe, Laplace-Wahrscheinlichkeiten, Urnenversuche und mehrstufige Zufallsversuche. An jeder Station löst ihr <b>drei Aufgaben</b> – dann gibt es eine Ziffer des Codes.</p>
+   <p>Im Labor sind <b>vier Stationen</b> versteckt: Grundbegriffe, Laplace-Wahrscheinlichkeiten, Urnenversuche und mehrstufige Zufallsversuche. An jeder Station löst ihr <b>drei bis vier Aufgaben</b> – dann gibt es eine Ziffer des Codes.</p>
    <p>Untersucht das Labor gründlich. Manche Dinge verraten euch hilfreiche Formeln.</p>
    <div class="row"><button class="btn" id="go">Labor betreten</button></div>`);
   panel.querySelector(".close").hidden=true;
@@ -465,7 +480,7 @@ function station(id){
   const st=S.st[id],info=ST[id];
   if(st.done){showPanel(`<h2 id="ptitle">${info.title}</h2><div class="fb good"><b class="t">Bereits gelöst</b>Hier habt ihr die <b>${ORDER.indexOf(id)+1}. Ziffer: ${st.digit}</b> erhalten.</div><div class="row"><button class="btn" data-close>Weitersuchen</button></div>`);return}
   const t=st.ts[st.i];
-  const head=`<div class="meta"><span class="label">${info.name} · Aufgabe ${st.i+1} von ${PER}</span><div class="sub">${st.ts.map((x,j)=>`<i class="${j<st.i?"ok":j===st.i?"on":""}">${j<st.i?"✓":j+1}</i>`).join("")}</div></div>
+  const head=`<div class="meta"><span class="label">${info.name} · Aufgabe ${st.i+1} von ${st.ts.length}</span><div class="sub">${st.ts.map((x,j)=>`<i class="${j<st.i?"ok":j===st.i?"on":""}">${j<st.i?"✓":j+1}</i>`).join("")}</div></div>
    <h2 id="ptitle">${info.title}</h2>${st.i===0?`<p>${info.intro}</p>`:""}`;
   if(t.kind==="mc"){
     showPanel(head+`<div class="card"><p class="q">${t.q}</p></div>
@@ -474,14 +489,14 @@ function station(id){
     panel.querySelectorAll(".choice").forEach(b=>b.addEventListener("click",()=>{
       const c=+b.dataset.c;
       if(c===t.correct){beep(true);panel.querySelectorAll(".choice").forEach(x=>x.disabled=true);b.classList.add("right");success(id,t.e);}
-      else{beep(false);S.mistakes++;t.fails++;b.disabled=true;$("#fb").innerHTML=`<div class="fb wrong"><b class="t">Nicht ganz</b>Diese Antwort stimmt nicht.</div>${t.fails>=2?`<div class="fb tip" style="margin-top:10px"><b class="t">Hinweis</b>${t.e}</div>`:""}`;}
+      else{beep(false);S.mistakes++;t.fails++;b.disabled=true;const H=MCH[id]||MCH._;$("#fb").innerHTML=`<div class="fb wrong"><b class="t">Nicht ganz</b>Diese Antwort stimmt nicht.</div><div class="fb tip" style="margin-top:10px"><b class="t">Hinweis</b>${t.fails>=2?H[1]:H[0]}</div>${t.fails>=3?`<div class="fb tip" style="margin-top:10px;border-color:var(--cyan)"><b class="t" style="color:var(--cyan)">Holt euch Hilfe</b>Ihr habt es jetzt dreimal versucht. Fragt eure Lehrerin oder euren Lehrer – gemeinsam findet ihr den Fehler!</div>`:""}`;}
     }));
     return;
   }
   showPanel(head+`<div class="card urn">${t.urn?urnSVG(t.urn):""}<p class="q" style="flex:1 1 300px">${t.q}</p></div>
    <div class="answer"><label for="ans">P =</label><input id="ans" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="z. B. 1/6"><button class="btn" id="check">Prüfen</button></div>
    <div class="keys" aria-label="Zeichen einfügen">${["/","^","(",")","−","%"].map(k=>`<button type="button" data-k="${k}">${k}</button>`).join("")}</div>
-   <p class="legend">Antwort als Bruch (1/6), Dezimalzahl (0,1667), Prozent (16,67 %) oder als Term, z. B. (5/6)^4 oder 1 − (5/6)^4.</p>
+   <p class="legend">Antwort als Bruch (1/6), Dezimalzahl auf 3 Stellen gerundet (0,167), Prozent auf 1 Stelle (16,7 %) oder als Term, z. B. (5/6)^4 oder 1 − (5/6)^4.</p>
    <div id="fb" aria-live="polite"></div>`,"#ans");
   const inp=$("#ans");
   panel.querySelectorAll(".keys button").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.k,p=inp.selectionStart??inp.value.length;inp.value=inp.value.slice(0,p)+k+inp.value.slice(inp.selectionEnd??p);inp.focus();inp.setSelectionRange(p+k.length,p+k.length)}));
@@ -496,14 +511,13 @@ function check(id){
   beep(false);S.mistakes++;t.fails++;inp.classList.add("wrongv");setTimeout(()=>inp.classList.remove("wrongv"),900);
   let h=`<div class="fb wrong"><b class="t">Das stimmt noch nicht</b>${Number.isNaN(v)?"Diese Eingabe kann ich nicht lesen. Nutzt Zahlen, / , ^ und Klammern.":v>1?"Eine Wahrscheinlichkeit kann nie größer als 1 (bzw. 100 %) sein!":"Rechnet noch einmal nach."}</div>`;
   h+=`<div class="fb tip" style="margin-top:10px"><b class="t">Hinweis</b>${t.fails>=2?t.tip2:t.tip1}</div>`;
-  if(t.fails>=3)h+=`<div class="row" style="margin-top:10px"><button class="btn alt" id="showsol">Lösung anzeigen</button></div><div id="solbox"></div>`;
+  if(t.fails>=3)h+=`<div class="fb tip" style="margin-top:10px;border-color:var(--cyan)"><b class="t" style="color:var(--cyan)">Holt euch Hilfe</b>Ihr habt es jetzt dreimal versucht. Fragt eure Lehrerin oder euren Lehrer – gemeinsam findet ihr den Fehler!</div>`;
   fb.innerHTML=h;inp.focus();inp.select();
-  const sb=$("#showsol");if(sb)sb.addEventListener("click",()=>{$("#solbox").innerHTML=`<div class="fb tip" style="margin-top:10px"><b class="t">Lösung</b>${t.sol}<br>Tippt das Ergebnis ab, um weiterzukommen.</div>`;sb.hidden=true});
 }
 function success(id,expl){
-  const st=S.st[id],last=st.i===PER-1;
+  const st=S.st[id],last=st.i===st.ts.length-1;
   $("#fb").innerHTML=`<div class="fb good"><b class="t">${pick(["Richtig!","Korrekt!","Genau so!","Sehr gut!"])}</b>${expl}</div><div class="row" style="margin-top:10px"><button class="btn" id="nextq">${last?"Code-Ziffer holen":"Nächste Aufgabe"}</button></div>`;
-  $("#nextq").focus();$("#nextq").addEventListener("click",()=>{st.i++;if(st.i>=PER){st.done=true;foundKey(id)}else station(id)});
+  $("#nextq").focus();$("#nextq").addEventListener("click",()=>{st.i++;if(st.i>=st.ts.length){st.done=true;foundKey(id)}else station(id)});
 }
 function foundKey(id){
   renderAll();const n=keysGot();
@@ -547,7 +561,7 @@ function win(){
   setTimeout(()=>{
     showPanel(`<p class="label">Zugang gewährt</p><h2 id="ptitle">Raum 1 geschafft!</h2>
      <p>Die Sicherheitstür gleitet nach oben – dahinter wartet schon das nächste Labor. Ihr beherrscht die Grundlagen: Begriffe, Laplace, Urnen und mehrstufige Zufallsversuche!</p>
-     <div class="stats"><div class="card"><div class="n">${fmt(used).replace("+","")}</div><span class="label">benötigte Zeit</span></div><div class="card"><div class="n">${S.mistakes}</div><span class="label">Fehlversuche</span></div><div class="card"><div class="n">${N*PER}</div><span class="label">gelöste Aufgaben</span></div></div>
+     <div class="stats"><div class="card"><div class="n">${fmt(used).replace("+","")}</div><span class="label">benötigte Zeit</span></div><div class="card"><div class="n">${S.mistakes}</div><span class="label">Fehlversuche</span></div><div class="card"><div class="n">${ORDER.reduce((a,k)=>a+S.st[k].ts.length,0)}</div><span class="label">gelöste Aufgaben</span></div></div>
      <p>Restzeit und Fehlversuche nehmt ihr mit in Raum 2.</p>
      <div class="row"><a class="btn" href="raum2.html?rest=${carry.rest}&fehler=${carry.fehler}&zeit=${carry.zeit}" target="_self">Weiter zu Raum 2 ➜</a><button class="btn alt" id="again">Nochmal mit neuen Aufgaben</button></div>`,"a.btn");
     panel.querySelector(".close").hidden=true;
@@ -557,7 +571,7 @@ function win(){
 function plan(){
   if(!S.started){intro();return}
   showPanel(`<h2 id="ptitle">Laborplan</h2><p>Das habt ihr schon entdeckt:</p>
-   <div class="keytags">${ORDER.map((k,i)=>S.st[k].done?`<span class="keytag got">${ST[k].icon} ${ST[k].name}: ${i+1}. Ziffer ${S.st[k].digit}</span>`:(S.st[k].i>0?`<span class="keytag">${ST[k].icon} ${ST[k].name}: ${S.st[k].i} von ${PER}</span>`:`<span class="keytag">❓ noch nicht gefunden</span>`)).join("")}</div>
+   <div class="keytags">${ORDER.map((k,i)=>S.st[k].done?`<span class="keytag got">${ST[k].icon} ${ST[k].name}: ${i+1}. Ziffer ${S.st[k].digit}</span>`:(S.st[k].i>0?`<span class="keytag">${ST[k].icon} ${ST[k].name}: ${S.st[k].i} von ${S.st[k].ts.length}</span>`:`<span class="keytag">❓ noch nicht gefunden</span>`)).join("")}</div>
    <p>Fehlversuche bisher: <b>${S.mistakes}</b></p><div class="row"><button class="btn" data-close>Zurück ins Labor</button></div>`);
 }
 function settings(){
