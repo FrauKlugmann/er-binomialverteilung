@@ -270,22 +270,24 @@ const KONF=[
  {pt:.18,txt:(n,k)=>`Bei einer Verkehrskontrolle von ${n} Fahrrädern hatten ${k} kein funktionierendes Licht.`,what:"aller Fahrräder ohne funktionierendes Licht",ns:[200,300,400,500,600]}
 ];
 function makeTasks(){
-  const lv=shuffle([...LEVELS,pick(LEVELS)]);
-  if(ROOM===3)return shuffle(PROG).slice(0,4).map((c,i)=>{
-    const n=pick(c.ns),[L,z]=lv[i],p=c.p,r=z*Math.sqrt(p*(1-p)/n),lo=p-r,hi=p+r;
-    return {q:`${c.txt(n)} Bestimmt das <b>${L}-%-Prognoseintervall</b> für den Anteil ${c.what} in dieser Stichprobe.`,lo,hi,fails:0,
-      tip1:`Notiert, was gegeben ist: die Wahrscheinlichkeit p, den Stichprobenumfang n und den Wert c, der zu ${L} % gehört. Die Formel für das Prognoseintervall findet ihr irgendwo im Labor.`,
-      tip2:`Rechnet zuerst den Abstand zum Mittelpunkt aus. Dann einmal abziehen und einmal addieren. Rundet erst ganz am Ende auf drei Nachkommastellen.`,
-      sol:`<span class="fm">[ ${c.ps} − ${dec(r,4)} ; ${c.ps} + ${dec(r,4)} ] ≈ [ ${dec(lo)} ; ${dec(hi)} ]</span>`,
-      satz:`Mit einer Wahrscheinlichkeit von ${L} % liegt der Anteil ${c.what} in der Stichprobe zwischen ${pc(lo)} und ${pc(hi)}.`};
+  if(ROOM===3)return shuffle(PROG).slice(0,4).map(c=>{
+    let n,mu,sg,a,b;
+    for(const nn of shuffle(c.ns)){n=nn;mu=n*c.p;sg=Math.sqrt(n*c.p*(1-c.p));a=mu-2*sg;b=mu+2*sg;
+      if(Math.abs(a-Math.round(a))>0.01&&Math.abs(b-Math.round(b))>0.01)break;}
+    const p=c.p,lo=Math.floor(a),hi=Math.ceil(b);
+    return {int:true,q:`${c.txt(n)} Bestimmt die <b>2σ-Umgebung (ca. 95 %)</b> für die Anzahl ${c.what} in dieser Stichprobe.`,lo,hi,fails:0,
+      tip1:`Notiert, was gegeben ist: die Wahrscheinlichkeit p und den Stichprobenumfang n. Berechnet dann den Erwartungswert μ = n · p und die Standardabweichung σ = √(n · p · (1 − p)). Die Formel findet ihr irgendwo im Labor.`,
+      tip2:`Rechnet μ − 2σ und μ + 2σ. Rundet dann auf ganze Zahlen – und zwar nach außen: die untere Grenze abrunden, die obere Grenze aufrunden.`,
+      sol:`<span class="fm">μ = ${n} · ${c.ps} = ${decT(mu,2)}; σ = √(${n} · ${c.ps} · ${decT(1-p,2)}) ≈ ${decT(sg,2)}<br>[ ${decT(mu,2)} − 2 · ${decT(sg,2)} ; ${decT(mu,2)} + 2 · ${decT(sg,2)} ] ≈ [ ${decT(a,2)} ; ${decT(b,2)} ] → [ ${lo} ; ${hi} ]</span>`,
+      satz:`Mit einer Wahrscheinlichkeit von ca. 95 % liegt die Anzahl ${c.what} in der Stichprobe zwischen ${lo} und ${hi}.`};
   });
-  return shuffle(KONF).slice(0,4).map((c,i)=>{
-    const n=pick(c.ns),k=Math.round(n*(c.pt+(Math.random()-.5)*.04)),h=k/n,[L,z]=lv[i],r=z*Math.sqrt(h*(1-h)/n),lo=h-r,hi=h+r;
-    return {q:`${c.txt(n,k)} Bestimmt das <b>${L}-%-Konfidenzintervall</b> für den Anteil ${c.what}.`,lo,hi,fails:0,
-      tip1:`Ihr kennt p nicht – also braucht ihr zuerst die relative Häufigkeit h der Stichprobe. Dazu n und den Wert c, der zu ${L} % gehört. Die Formel findet ihr irgendwo im Foyer.`,
-      tip2:`Habt ihr h richtig berechnet? Rechnet dann den Abstand zum Mittelpunkt aus, einmal abziehen und einmal addieren. Rundet erst ganz am Ende auf drei Nachkommastellen.`,
+  return shuffle(KONF).slice(0,4).map(c=>{
+    const n=pick(c.ns),k=Math.round(n*(c.pt+(Math.random()-.5)*.04)),h=k/n,z=2,r=z*Math.sqrt(h*(1-h)/n),lo=h-r,hi=h+r;
+    return {q:`${c.txt(n,k)} Bestimmt das <b>Konfidenzintervall (2σ, ca. 95 %)</b> für den Anteil ${c.what}.`,lo,hi,fails:0,
+      tip1:`Ihr kennt p nicht – also braucht ihr zuerst die relative Häufigkeit h der Stichprobe. Dazu n und c = 2. Die Formel findet ihr irgendwo im Foyer.`,
+      tip2:`Habt ihr h richtig berechnet? Rechnet dann den Abstand zum Mittelpunkt aus (mit c = 2), einmal abziehen und einmal addieren. Rundet erst ganz am Ende auf drei Nachkommastellen.`,
       sol:`<span class="fm">h = ${decT(h)}; [ ${decT(h)} − ${dec(r,4)} ; ${decT(h)} + ${dec(r,4)} ] ≈ [ ${dec(lo)} ; ${dec(hi)} ]</span>`,
-      satz:`Mit ${L} % Sicherheit liegt der unbekannte Anteil ${c.what} zwischen ${pc(lo)} und ${pc(hi)}.`};
+      satz:`Mit ca. 95 % Sicherheit liegt der unbekannte Anteil ${c.what} zwischen ${pc(lo)} und ${pc(hi)}.`};
   });
 }
 
@@ -296,9 +298,9 @@ const R={
     ST:{teleskop:{name:"Teleskop",title:"Das Teleskop",found:"Im Okular erscheint"},sanduhr:{name:"Sanduhr",title:"Die Sanduhr",found:"Im Sockel der Sanduhr klickt ein Fach auf:"},schrank:{name:"Aktenschrank",title:"Der Aktenschrank",found:"In der obersten Schublade liegt eine Karte mit"},regal:{name:"Bücherregal",title:"Das Bücherregal",found:"Hinter einem Ordner klebt ein Zettel mit"}},
     ORDER:["teleskop","sanduhr","schrank","regal"],
     HINT:{
-     tafel:["Das Whiteboard",`<p>Neben der Formel auf dem Whiteboard steht klein darunter:</p><div class="card"><p><b>Prognoseintervall</b> für die relative Häufigkeit h, wenn p bekannt ist:</p><p class="formula">[ p − c·√(p·(1 − p) : n) ; p + c·√(p·(1 − p) : n) ]</p></div>`],
-     screen:["Der große 95-%-Bildschirm",`<p>Unter der Glockenkurve leuchtet eine Tabelle:</p><div class="card"><p>90 % → c = 1,64</p><p>95 % → c = 1,96</p><p>99 % → c = 2,58</p></div>`],
-     scatter:["Der Bildschirm mit den Punkten",`<p>Eine Notiz: <i>„Prognose: p ist bekannt – wir sagen voraus, wo h landet. Grenzen auf drei Nachkommastellen runden!“</i></p>`]},
+     tafel:["Das Whiteboard",`<p>Neben der Formel auf dem Whiteboard steht klein darunter:</p><div class="card"><p><b>Prognoseintervall</b> für die Anzahl X der Treffer, wenn p bekannt ist (2σ-Umgebung):</p><p class="formula">[ μ − 2σ ; μ + 2σ ]</p><p>mit μ = n · p und σ = √(n · p · (1 − p))</p></div>`],
+     screen:["Der große 95-%-Bildschirm",`<p>Unter der Glockenkurve leuchtet:</p><div class="card"><p><b>2σ-Umgebung:</b> c = 2</p><p>Das Ergebnis liegt dann mit ca. 95 % Wahrscheinlichkeit im Intervall.</p></div>`],
+     scatter:["Der Bildschirm mit den Punkten",`<p>Eine Notiz: <i>„Prognose: p ist bekannt – wir sagen voraus, wie viele Treffer X es in der Stichprobe gibt. Grenzen auf ganze Zahlen runden: die untere Grenze immer abrunden, die obere Grenze immer aufrunden!“</i></p>`]},
     LOOK:{pflanze:["Die Pflanze","Sie wächst ganz zufällig. Kein Hinweis."],fenster:["Das Fenster","Draußen die Sternwarte. Schön, aber hier ist nichts."],kugel:["Die Hologramm-Kugel","Sie dreht sich und dreht sich … und verrät nichts."],
      urne:["Die Urne","Rote und blaue Kugeln – die kennt ihr schon. Diesmal ist hier nichts versteckt."],laptop:["Der Laptop","Diesmal gesperrt. Kein Hinweis."],holo:["Die Hologramm-Balken","Ein Histogramm zum Anfassen – aber nichts zu finden."],
      wuerfel:["Der Würfel am Tisch","Nur Deko. Der Zufall wohnt woanders."],hocker:["Der Hocker","Bequem. Mehr nicht."],buecher:["Die Bücher","Dicke Statistikbücher. Ihr blättert – nichts fällt heraus."],kreis:["Das Kreisdiagramm","Hübsche Tortenstücke. Kein Hinweis."]},
@@ -311,7 +313,7 @@ const R={
     ORDER:["globus","karte","sofa","kuebel"],
     HINT:{
      matte:["Die Fußmatte",`<p>Unter der Fußmatte liegt ein Zettel:</p><div class="card"><p><b>Konfidenzintervall</b> für die unbekannte Wahrscheinlichkeit p:</p><p class="formula">[ h − c·√(h·(1 − h) : n) ; h + c·√(h·(1 − h) : n) ]</p><p>mit h = k : n aus der Stichprobe</p></div>`],
-     ring:["Der Leuchtring an der Decke",`<p>In den Leuchtring sind Zahlen eingraviert:</p><div class="card"><p>90 % → c = 1,64</p><p>95 % → c = 1,96</p><p>99 % → c = 2,58</p></div>`],
+     ring:["Der Leuchtring an der Decke",`<p>In den Leuchtring ist eingraviert:</p><div class="card"><p>c = 2 → ca. 95 %</p></div>`],
      lampe:["Die Wandlampe",`<p>Auf dem Lampenschirm steht: <i>„Konfidenz: h ist bekannt, p ist gesucht. Grenzen auf drei Nachkommastellen runden!“</i></p>`]},
     LOOK:{pflanze:["Die Pflanze","Grün und gesund – kein Hinweis."],tisch:["Der Couchtisch","Glänzend poliert. Nichts darauf, nichts darunter."],sockel:["Der Sockel","Ein schwerer Metallsockel. Fest verschraubt, kein Fach."],efeu:["Der Efeu","Er rankt sich bis zur Decke. Hier ist nichts."],stadt:["Die Skyline","Da draußen wartet die Freiheit. Erst den Code!"]},
     HOT:[["pflanze",0,700,200,941],["pflanze",0,0,90,480],["ring",380,15,760,125],["karte",100,155,420,445],["efeu",535,150,615,500],["globus",440,335,585,485],["sockel",450,485,580,635],["tisch",240,690,600,860],["tisch",345,545,500,690],["sofa",0,505,345,700],["lampe",1535,195,1585,275],["pflanze",1495,290,1671,500],["kuebel",1570,500,1671,712],["matte",600,632,1245,712],["tuer",680,185,1350,630],["keypad",1388,298,1478,466]],
@@ -419,7 +421,7 @@ function intro(){
   const has=carry.rest||carry.fehler;
   showPanel(`<p class="label">Escape-Room Stochastik · ${R.sub}</p><h2 id="ptitle">${R.title}</h2>
    <p>${R.intro}</p>
-   <p>Vier Stationen sind versteckt – jede liefert eine Ziffer für den <b>vierstelligen Code</b>. Gebt die Grenzen auf <b>drei Nachkommastellen</b> gerundet ein (z. B. 0,412) oder in Prozent (41,2 %).</p>
+   <p>Vier Stationen sind versteckt – jede liefert eine Ziffer für den <b>vierstelligen Code</b>. ${ROOM===3?"Gebt die Grenzen als <b>ganze Zahlen</b> ein: die untere Grenze <b>abgerundet</b>, die obere Grenze <b>aufgerundet</b>.":"Gebt die Grenzen auf <b>drei Nachkommastellen</b> gerundet ein (z. B. 0,412) oder in Prozent (41,2 %)."}</p>
    ${has?`<p>Aus dem letzten Raum bringt ihr <b>${fmt(carry.rest).replace("+","−")}</b> Restzeit und <b>${carry.fehler}</b> Fehlversuche mit. Dazu kommen 30 Minuten.</p>`:""}
    <div class="row"><button class="btn" id="go">Los geht's</button></div>`);
   panel.querySelector(".close").hidden=true;
@@ -439,15 +441,15 @@ function station(id){
 function check(id){
   const st=S.st[id],t=st.t,a=$("#lo"),b=$("#hi"),fb=$("#fb");
   if(!a.value.trim()||!b.value.trim()){fb.innerHTML=`<div class="fb tip"><b class="t">Noch nicht vollständig</b>Gebt beide Grenzen ein.</div>`;return}
-  const va=evalExpr(a.value),vb=evalExpr(b.value),oa=ok(va,t.lo),ob=ok(vb,t.hi);
+  const va=evalExpr(a.value),vb=evalExpr(b.value),okI=(v,x)=>isFinite(v)&&Math.abs(v-x)<1e-9,oa=(t.int?okI:ok)(va,t.lo),ob=(t.int?okI:ok)(vb,t.hi);
   a.classList.toggle("right",oa);b.classList.toggle("right",ob);
   if(oa&&ob){beep(true);a.classList.remove("wrongv");b.classList.remove("wrongv");a.readOnly=b.readOnly=true;$("#check").hidden=true;
     fb.innerHTML=`<div class="fb good"><b class="t">${pick(["Richtig!","Volltreffer!","Genau so!","Sehr gut!"])}</b>${t.sol}<p class="satz"><b>Antwortsatz:</b> ${t.satz}</p></div><div class="row" style="margin-top:10px"><button class="btn" id="nextq">Code-Ziffer holen</button></div>`;
     $("#nextq").focus();$("#nextq").addEventListener("click",()=>{st.done=true;foundKey(id)});return}
   beep(false);S.mistakes++;t.fails++;
   [[a,oa],[b,ob]].forEach(([el,o])=>{if(!o){el.classList.add("wrongv");setTimeout(()=>el.classList.remove("wrongv"),900)}});
-  const which=oa?"Die untere Grenze stimmt, die obere noch nicht.":ob?"Die obere Grenze stimmt, die untere noch nicht.":"Beide Grenzen stimmen noch nicht.";
-  let h=`<div class="fb wrong"><b class="t">Noch nicht</b>${Number.isNaN(va)||Number.isNaN(vb)?"Eine Eingabe kann ich nicht lesen. Nutzt Dezimalzahlen mit Komma.":which}</div>`;
+  const which=(t.int&&((isFinite(va)&&!Number.isInteger(va))||(isFinite(vb)&&!Number.isInteger(vb))))?"Rundet noch auf ganze Zahlen – nach außen: die untere Grenze abrunden, die obere aufrunden.":oa?"Die untere Grenze stimmt, die obere noch nicht.":ob?"Die obere Grenze stimmt, die untere noch nicht.":"Beide Grenzen stimmen noch nicht.";
+  let h=`<div class="fb wrong"><b class="t">Noch nicht</b>${Number.isNaN(va)||Number.isNaN(vb)?(t.int?"Eine Eingabe kann ich nicht lesen. Gebt ganze Zahlen ein.":"Eine Eingabe kann ich nicht lesen. Nutzt Dezimalzahlen mit Komma."):which}</div>`;
   h+=`<div class="fb tip" style="margin-top:10px"><b class="t">Hinweis</b>${t.fails>=2?t.tip2:t.tip1}</div>`;
   if(t.fails>=3)h+=`<div class="fb tip" style="margin-top:10px;border-color:var(--cyan)"><b class="t" style="color:var(--cyan)">Holt euch Hilfe</b>Ihr habt es jetzt dreimal versucht. Fragt eure Lehrerin oder euren Lehrer – gemeinsam findet ihr den Fehler!</div>`;
   fb.innerHTML=h;
